@@ -1,3 +1,9 @@
+## 0.3.0-dev
+- fork [reactives](https://github.com/ripemango/reactives)
+- change lib api
+- huge code refactoring
+- add more controllers
+
 ## 0.2.0
 
 * Fix concurrent access bug
