@@ -1,54 +1,79 @@
-import 'package:flutter/animation.dart';
-import 'package:flutter/material.dart';
-import 'package:reactives/src/ticker.dart';
-import 'reactive.dart';
+part of 'reactive.dart';
 
-class ReactiveAnimationController extends Reactive
-    with SingleTickerProviderReactiveMixin
-    implements TickerProvider {
-  final bool _listen;
-  late final AnimationController ctrl;
+class ReactiveAnimationController extends ReactiveController {
+  late final AnimationController controller;
+  final VoidCallback? _onChanged;
+  final bool _updateHost;
 
   ReactiveAnimationController(
-    ReactiveHost host, {
-    AnimationController? ctrl,
-    bool listen = false,
-  })  : _listen = listen,
+    ReactiveControllerHost host, {
+    required TickerProvider vsync,
+    double? value,
+    Duration? duration,
+    Duration? reverseDuration,
+    String? debugLabel,
+    double lowerBound = 0.0,
+    double upperBound = 1.0,
+    AnimationBehavior animationBehavior = AnimationBehavior.normal,
+    bool updateHost = false,
+    VoidCallback? onChanged,
+  })  : _onChanged = onChanged,
+        _updateHost = updateHost,
         super(host) {
-    this.ctrl = ctrl ?? AnimationController(vsync: this);
-    if (_listen) this.ctrl.addListener(_onChange);
-  }
+    controller = AnimationController(
+      vsync: vsync,
+      value: value,
+      duration: duration,
+      reverseDuration: reverseDuration,
+      debugLabel: debugLabel,
+      lowerBound: lowerBound,
+      upperBound: upperBound,
+      animationBehavior: animationBehavior,
+    );
 
-  void _onChange() {
-    host.requestUpdate();
+    if (_updateHost) controller.addListener(host.requestUpdate);
+    if (_onChanged != null) controller.addListener(_onChanged!);
   }
 
   @override
   void dispose() {
-    if (_listen) ctrl.removeListener(_onChange);
-    ctrl.dispose();
+    if (_onChanged != null) controller.removeListener(_onChanged!);
+    if (_updateHost) controller.removeListener(host.requestUpdate);
+
+    controller.dispose();
     super.dispose();
   }
 }
 
-class ReactiveAnimation<T> extends Reactive {
-  final Animation<T> animation;
-  final VoidCallback? listener;
-  ReactiveAnimation(
-    ReactiveHost host, {
-    required this.animation,
-    this.listener,
-  }) : super(host) {
-    animation.addListener(listener ?? _onChange);
-  }
+class ReactiveTabController extends ReactiveController {
+  late final TabController controller;
+  final bool _updateHost;
+  final VoidCallback? _onChanged;
 
-  void _onChange() {
-    host.requestUpdate();
+  ReactiveTabController(
+    ReactiveControllerHost host, {
+    int initialIndex = 0,
+    required int length,
+    required TickerProvider vsync,
+    bool updateHost = false,
+    VoidCallback? onChanged,
+  })  : _updateHost = updateHost,
+        _onChanged = onChanged,
+        super(host) {
+    controller = TabController(
+      initialIndex: initialIndex,
+      length: length,
+      vsync: vsync,
+    );
+    if (_updateHost) controller.addListener(host.requestUpdate);
+    if (_onChanged != null) controller.addListener(_onChanged!);
   }
 
   @override
   void dispose() {
-    animation.removeListener(listener ?? _onChange);
+    if (_updateHost) controller.removeListener(host.requestUpdate);
+    if (_onChanged != null) controller.removeListener(_onChanged!);
+    controller.dispose();
     super.dispose();
   }
 }

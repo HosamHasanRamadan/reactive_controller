@@ -1,10 +1,8 @@
-import 'package:flutter/foundation.dart';
-import 'package:flutter/scheduler.dart';
-import 'package:flutter/widgets.dart';
-import 'package:reactives/reactives.dart';
+part of 'reactive.dart';
 
 /// Port of [SingleTickerProviderStateMixin] on a [Reactive]
-mixin SingleTickerProviderReactiveMixin on Reactive implements TickerProvider {
+mixin SingleTickerProviderReactiveMixin on ReactiveController
+    implements TickerProvider {
   Ticker? _ticker;
 
   @override

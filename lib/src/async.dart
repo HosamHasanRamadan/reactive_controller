@@ -1,72 +1,75 @@
-import 'dart:async';
+part of 'reactive.dart';
 
-import 'package:flutter/material.dart';
-import 'package:reactives/reactives.dart';
-
-class ReactiveFuture<T> extends Reactive {
+class ReactiveFuture<T> extends ReactiveController {
   final Future<T> future;
+  final bool _updateHost;
+  final OnChanged<AsyncSnapshot<T>>? _onChanged;
 
-  AsyncSnapshot<T> _snapshot = const AsyncSnapshot.waiting();
-  AsyncSnapshot get snapshot => _snapshot;
+  AsyncSnapshot<T> _snapshot = const AsyncSnapshot.nothing();
+  AsyncSnapshot<T> get snapshot => _snapshot;
 
   ReactiveFuture(
-    ReactiveHost host,
+    ReactiveControllerHost host,
     this.future, {
     T? initialData,
-    void Function(AsyncSnapshot<T>)? listener,
-  }) : super(host) {
+    OnChanged<AsyncSnapshot<T>>? onChanged,
+    bool updateHost = true,
+  })  : _updateHost = updateHost,
+        _onChanged = onChanged,
+        super(host) {
     if (initialData != null) {
       _snapshot = AsyncSnapshot.withData(ConnectionState.waiting, initialData);
     }
 
     future.then((data) {
+      final prev = _snapshot;
       _snapshot = AsyncSnapshot.withData(ConnectionState.done, data);
-      if (listener != null) {
-        listener(_snapshot);
-      } else {
-        host.requestUpdate();
-      }
+      _onChanged?.call(prev, snapshot);
+      if (_updateHost) host.requestUpdate();
     }, onError: (err, st) {
+      final prev = _snapshot;
       _snapshot = AsyncSnapshot.withError(ConnectionState.done, err, st);
-      if (listener != null) {
-        listener(_snapshot);
-      } else {
-        host.requestUpdate();
-      }
+      _onChanged?.call(prev, snapshot);
+      if (_updateHost) host.requestUpdate();
     });
   }
 }
 
-class ReactiveStream<T> extends Reactive {
-  final Stream<T> stream;
+class ReactiveStream<T> extends ReactiveController {
+  final Stream<T> _stream;
+  Stream<T> get stream => _stream;
 
-  AsyncSnapshot<T> _snapshot = const AsyncSnapshot.waiting();
-  AsyncSnapshot get snapshot => _snapshot;
+  AsyncSnapshot<T> _snapshot = const AsyncSnapshot.nothing();
+  AsyncSnapshot<T> get snapshot => _snapshot;
 
   StreamSubscription<T>? _subscription;
 
-  @protected
-  final void Function(AsyncSnapshot<T>)? listener;
+  final OnChanged<AsyncSnapshot<T>>? _onChanged;
+  final bool _updateHost;
 
   ReactiveStream(
-    ReactiveHost host,
-    this.stream, {
+    ReactiveControllerHost host, {
+    required Stream<T> stream,
     T? initialData,
-    this.listener,
-  }) : super(host) {
+    OnChanged<AsyncSnapshot<T>>? onChanged,
+    bool updateHost = true,
+  })  : _onChanged = onChanged,
+        _updateHost = updateHost,
+        _stream = stream,
+        super(host) {
     if (initialData != null) {
       _snapshot = AsyncSnapshot.withData(ConnectionState.waiting, initialData);
     }
 
-    _subscription = stream.listen((T data) {
-      _snapshot = afterData(_snapshot, data);
-      _onChange();
+    _subscription = _stream.listen((T data) {
+      final next = afterData(_snapshot, data);
+      _onChange(next);
     }, onError: (Object error, StackTrace stackTrace) {
-      _snapshot = afterError(_snapshot, error, stackTrace);
-      _onChange();
+      final next = afterError(_snapshot, error, stackTrace);
+      _onChange(next);
     }, onDone: () {
-      _snapshot = afterDone(_snapshot);
-      _onChange();
+      final next = afterDone(_snapshot);
+      _onChange(next);
     });
   }
 
@@ -77,27 +80,35 @@ class ReactiveStream<T> extends Reactive {
     super.dispose();
   }
 
-  void _onChange() {
-    final lis = listener;
-    if (lis != null) {
-      lis(_snapshot);
-    } else {
-      host.requestUpdate();
-    }
+  void _onChange(AsyncSnapshot<T> next) {
+    final prev = _snapshot;
+    _snapshot = next;
+    _onChanged?.call(prev, next);
+    if (_updateHost) host.requestUpdate();
   }
 
   AsyncSnapshot<T> afterConnected(AsyncSnapshot<T> current) =>
       current.inState(ConnectionState.waiting);
 
-  AsyncSnapshot<T> afterData(AsyncSnapshot<T> current, T data) {
-    return AsyncSnapshot<T>.withData(ConnectionState.active, data);
-  }
+  AsyncSnapshot<T> afterData(
+    AsyncSnapshot<T> current,
+    T data,
+  ) =>
+      AsyncSnapshot<T>.withData(
+        ConnectionState.active,
+        data,
+      );
 
   AsyncSnapshot<T> afterError(
-      AsyncSnapshot<T> current, Object error, StackTrace stackTrace) {
-    return AsyncSnapshot<T>.withError(
-        ConnectionState.active, error, stackTrace);
-  }
+    AsyncSnapshot<T> current,
+    Object error,
+    StackTrace stackTrace,
+  ) =>
+      AsyncSnapshot<T>.withError(
+        ConnectionState.active,
+        error,
+        stackTrace,
+      );
 
   AsyncSnapshot<T> afterDone(AsyncSnapshot<T> current) =>
       current.inState(ConnectionState.done);
