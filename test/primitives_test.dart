@@ -1,25 +1,26 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:reactives/reactives.dart';
+import 'package:reactive_controller/reactive_controller.dart';
 
 void main() {
   Widget getApp() => MaterialApp(home: Scaffold(body: _PrimitiveTestWidget()));
   testWidgets('defaults / initial values', (tester) async {
     /// create a state so we can construct reactive directly
     final state = _PrimitiveTestWidgetState(); //
-    expect(ReactiveInt(state).value, 0);
-    expect(ReactiveInt(state, initial: 1).value, 1);
-    expect(ReactiveDouble(state).value, 0);
-    expect(ReactiveDouble(state, initial: 1).value, 1);
-    expect(ReactiveString(state).value, '');
-    expect(ReactiveString(state, initial: 'a').value, 'a');
-    expect(ReactiveBool(state).value, false);
-    expect(ReactiveBool(state, initial: true).value, true);
+    expect(ReactiveInt(state, initialValue: 0).value, 0);
+    expect(ReactiveInt(state, initialValue: 1).value, 1);
+    expect(ReactiveDouble(state, initialValue: 0.0).value, 0);
+    expect(ReactiveDouble(state, initialValue: 1).value, 1);
+    expect(ReactiveString(state, initialValue: '').value, '');
+    expect(ReactiveString(state, initialValue: 'a').value, 'a');
+    expect(ReactiveBool(state, initialValue: false).value, false);
+    expect(ReactiveBool(state, initialValue: true).value, true);
   });
 
   testWidgets('widgets rebuild when data changes', (tester) async {
     await tester.pumpWidget(getApp());
-    _PrimitiveTestWidgetState state = tester.state(find.byType(_PrimitiveTestWidget));
+    _PrimitiveTestWidgetState state =
+        tester.state(find.byType(_PrimitiveTestWidget));
     expect(find.text('0'), findsOneWidget);
     expect(find.text('0.0'), findsOneWidget);
     expect(find.text('false'), findsOneWidget);
@@ -41,11 +42,18 @@ class _PrimitiveTestWidget extends StatefulWidget {
   _PrimitiveTestWidgetState createState() => _PrimitiveTestWidgetState();
 }
 
-class _PrimitiveTestWidgetState extends State<_PrimitiveTestWidget> with ReactiveHostMixin {
-  late final ReactiveInt someInt = ReactiveInt(this);
-  late final ReactiveDouble someDouble = ReactiveDouble(this);
-  late final ReactiveString someString = ReactiveString(this);
-  late final ReactiveBool someBool = ReactiveBool(this);
+class _PrimitiveTestWidgetState extends State<_PrimitiveTestWidget>
+    with ReactiveControllerHostMixin {
+  late final ReactiveInt someInt = ReactiveInt(this, initialValue: 0);
+  late final ReactiveDouble someDouble = ReactiveDouble(
+    this,
+    initialValue: 0.0,
+  );
+  late final ReactiveString someString = ReactiveString(
+    this,
+    initialValue: '',
+  );
+  late final ReactiveBool someBool = ReactiveBool(this, initialValue: false);
   @override
   Widget build(BuildContext context) {
     return Column(

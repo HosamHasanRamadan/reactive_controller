@@ -1,4 +1,4 @@
-# reactives
+# reactive_controller
 
 A new way for Flutter to reuse/group common logic. Think of them like React hooks but for and of flutter.
 
