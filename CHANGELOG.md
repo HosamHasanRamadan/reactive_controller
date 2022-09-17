@@ -1,3 +1,6 @@
+## 0.3.0+1-dev
+- update github link
+
 ## 0.3.0-dev
 - fork [reactives](https://github.com/ripemango/reactives)
 - change lib api
