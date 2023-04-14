@@ -1,6 +1,7 @@
 part of 'reactive.dart';
 
 class ReactiveFocusNode extends ReactiveChangeNotifier<FocusNode> {
+  late final node = notifier;
   ReactiveFocusNode(
     ReactiveControllerHost host, {
     String? debugLabel,
@@ -14,7 +15,7 @@ class ReactiveFocusNode extends ReactiveChangeNotifier<FocusNode> {
     VoidCallback? onChanged,
   }) : super(
           host,
-          notifier: FocusNode(
+          changeNotifier: FocusNode(
             debugLabel: debugLabel,
             onKey: onKey,
             onKeyEvent: onKeyEvent,
@@ -30,6 +31,7 @@ class ReactiveFocusNode extends ReactiveChangeNotifier<FocusNode> {
 
 class ReactiveTextEditingController
     extends ReactiveChangeNotifier<TextEditingController> {
+  late final controller = notifier;
   ReactiveTextEditingController(
     ReactiveControllerHost host, {
     String? text,
@@ -37,7 +39,7 @@ class ReactiveTextEditingController
     VoidCallback? onChanged,
   }) : super(
           host,
-          notifier: TextEditingController(text: text),
+          changeNotifier: TextEditingController(text: text),
           updateHost: updateHost,
           onChanged: onChanged,
         );
@@ -45,6 +47,8 @@ class ReactiveTextEditingController
 
 class ReactiveScrollController
     extends ReactiveChangeNotifier<ScrollController> {
+  late final controller = notifier;
+
   ReactiveScrollController(
     ReactiveControllerHost host, {
     double initialScrollOffset = 0.0,
@@ -54,7 +58,7 @@ class ReactiveScrollController
     VoidCallback? onChanged,
   }) : super(
           host,
-          notifier: ScrollController(
+          changeNotifier: ScrollController(
             initialScrollOffset: initialScrollOffset,
             keepScrollOffset: keepScrollOffset,
             debugLabel: debugLabel,
@@ -65,6 +69,8 @@ class ReactiveScrollController
 }
 
 class ReactivePageController extends ReactiveChangeNotifier<PageController> {
+  late final controller = notifier;
+
   ReactivePageController(
     ReactiveControllerHost host, {
     int initialPage = 0,
@@ -74,7 +80,7 @@ class ReactivePageController extends ReactiveChangeNotifier<PageController> {
     VoidCallback? onChanged,
   }) : super(
           host,
-          notifier: PageController(
+          changeNotifier: PageController(
             initialPage: initialPage,
             keepPage: keepPage,
             viewportFraction: viewportFraction,

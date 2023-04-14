@@ -21,7 +21,7 @@ mixin SingleTickerProviderReactiveMixin on ReactiveController
 
   @override
   void didChangeDependencies() {
-    if (_ticker != null) _ticker!.muted = !TickerMode.of(host.context);
+    if (_ticker != null) _ticker!.muted = !TickerMode.of(context);
     super.didChangeDependencies();
   }
 

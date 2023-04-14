@@ -4,12 +4,18 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart';
 
 import 'package:reactive_controller/src/migration_helper.dart';
+part 'widgets.dart';
 
 typedef OnChanged<T> = void Function(T? previous, T next);
+typedef OnUpdated<T> = void Function(T value);
 
 abstract class ReactiveController with Diagnosticable {
   @protected
   final ReactiveControllerHost host;
+
+  BuildContext get context => host.context;
+
+  bool get isMounted => host.mounted;
 
   ReactiveController(this.host) {
     host.addController(this);
@@ -42,6 +48,7 @@ abstract class ReactiveControllerHost {
   void requestUpdate();
   Future<void> get updateComplete;
   BuildContext get context;
+  bool get mounted;
 }
 
 @optionalTypeArgs
