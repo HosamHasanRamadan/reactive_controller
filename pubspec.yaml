@@ -1,6 +1,6 @@
 name: reactive_controller
 description: A new way to extract/group/reuse common logic of StatefulWidget. Think of them like React hooks but for and of flutter.
-version: 1.0.0-alpha
+version: 1.0.1-alpha
 repository: https://github.com/HosamHasanRamadan/reactive_controller
 
 environment:

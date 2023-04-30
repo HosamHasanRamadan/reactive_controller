@@ -1,3 +1,6 @@
+## 1.0.1-alpha
+- Add logo
+
 ## 1.0.0-alpha
 - Many breaking changes
 
