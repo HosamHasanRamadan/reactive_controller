@@ -74,3 +74,32 @@ class ReactiveListenableSelector<T extends Listenable, S>
     super.dispose();
   }
 }
+
+class ReactiveValue<T> extends ReactiveController {
+  ReactiveValue(
+    ReactiveControllerHost host, {
+    required this.initial,
+    this.onChange,
+    this.updateHost = true,
+  }) : super(host) {
+    _value = initial;
+  }
+  final T initial;
+  late T _value;
+  late T? _prev;
+  final OnChanged<T>? onChange;
+  final bool updateHost;
+
+  T get value => _value;
+  set value(T value) {
+    if (value == _value) return;
+    if (isMounted == false) return;
+    _prev = _value;
+    _value = value;
+    onChange?.call(_prev, _value);
+
+    if (updateHost) {
+      host.requestUpdate();
+    }
+  }
+}
