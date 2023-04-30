@@ -1,13 +1,14 @@
 part of 'reactive.dart';
 
-class ReactiveAnimationController extends ReactiveController {
+class ReactiveAnimationController extends ReactiveController
+    with SingleTickerProviderReactiveMixin {
   late final AnimationController controller;
   final VoidCallback? _onChanged;
   final bool _updateHost;
 
   ReactiveAnimationController(
     ReactiveControllerHost host, {
-    required TickerProvider vsync,
+    TickerProvider? vsync,
     double? value,
     Duration? duration,
     Duration? reverseDuration,
@@ -21,7 +22,7 @@ class ReactiveAnimationController extends ReactiveController {
         _updateHost = updateHost,
         super(host) {
     controller = AnimationController(
-      vsync: vsync,
+      vsync: vsync ?? this,
       value: value,
       duration: duration,
       reverseDuration: reverseDuration,
@@ -37,15 +38,13 @@ class ReactiveAnimationController extends ReactiveController {
 
   @override
   void dispose() {
-    if (_onChanged != null) controller.removeListener(_onChanged!);
-    if (_updateHost) controller.removeListener(host.requestUpdate);
-
     controller.dispose();
     super.dispose();
   }
 }
 
-class ReactiveTabController extends ReactiveController {
+class ReactiveTabController extends ReactiveController
+    with SingleTickerProviderReactiveMixin {
   late final TabController controller;
   final bool _updateHost;
   final VoidCallback? _onChanged;
@@ -54,7 +53,7 @@ class ReactiveTabController extends ReactiveController {
     ReactiveControllerHost host, {
     int initialIndex = 0,
     required int length,
-    required TickerProvider vsync,
+    TickerProvider? vsync,
     bool updateHost = false,
     VoidCallback? onChanged,
   })  : _updateHost = updateHost,
@@ -63,7 +62,7 @@ class ReactiveTabController extends ReactiveController {
     controller = TabController(
       initialIndex: initialIndex,
       length: length,
-      vsync: vsync,
+      vsync: vsync ?? this,
     );
     if (_updateHost) controller.addListener(host.requestUpdate);
     if (_onChanged != null) controller.addListener(_onChanged!);
@@ -71,8 +70,6 @@ class ReactiveTabController extends ReactiveController {
 
   @override
   void dispose() {
-    if (_updateHost) controller.removeListener(host.requestUpdate);
-    if (_onChanged != null) controller.removeListener(_onChanged!);
     controller.dispose();
     super.dispose();
   }
