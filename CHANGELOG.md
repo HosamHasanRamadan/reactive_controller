@@ -1,3 +1,6 @@
+## 1.0.0-alpha
+- Many breaking changes
+
 ## 0.3.0+1-dev
 - update github link
 
