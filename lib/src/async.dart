@@ -5,8 +5,10 @@ class ReactiveFuture<T> extends ReactiveController {
   final bool _updateHost;
   final OnChanged<AsyncSnapshot<T>>? _onChanged;
 
-  AsyncSnapshot<T> _snapshot = const AsyncSnapshot.nothing();
-  AsyncSnapshot<T> get snapshot => _snapshot;
+  AsyncSnapshot<T> get snapshot => _snapshotNotifier.value;
+
+  final _snapshotNotifier = ValueNotifier(AsyncSnapshot<T>.nothing());
+  ValueNotifier<AsyncSnapshot<T>> get snapshotNotifier => _snapshotNotifier;
 
   ReactiveFuture(
     ReactiveControllerHost host,
@@ -18,17 +20,22 @@ class ReactiveFuture<T> extends ReactiveController {
         _onChanged = onChanged,
         super(host) {
     if (initialData != null) {
-      _snapshot = AsyncSnapshot.withData(ConnectionState.waiting, initialData);
+      _snapshotNotifier.value =
+          AsyncSnapshot.withData(ConnectionState.waiting, initialData);
     }
 
     future.then((data) {
-      final prev = _snapshot;
-      _snapshot = AsyncSnapshot.withData(ConnectionState.done, data);
+      final prev = snapshot;
+      _snapshotNotifier.value =
+          AsyncSnapshot.withData(ConnectionState.done, data);
+
       _onChanged?.call(prev, snapshot);
       if (_updateHost) host.requestUpdate();
     }, onError: (err, st) {
-      final prev = _snapshot;
-      _snapshot = AsyncSnapshot.withError(ConnectionState.done, err, st);
+      final prev = snapshot;
+      _snapshotNotifier.value =
+          AsyncSnapshot.withError(ConnectionState.done, err, st);
+
       _onChanged?.call(prev, snapshot);
       if (_updateHost) host.requestUpdate();
     });
@@ -39,8 +46,10 @@ class ReactiveStream<T> extends ReactiveController {
   final Stream<T> _stream;
   Stream<T> get stream => _stream;
 
-  AsyncSnapshot<T> _snapshot = const AsyncSnapshot.nothing();
-  AsyncSnapshot<T> get snapshot => _snapshot;
+  AsyncSnapshot<T> get snapshot => _snapshotNotifier.value;
+
+  final _snapshotNotifier = ValueNotifier(AsyncSnapshot<T>.nothing());
+  ValueNotifier<AsyncSnapshot<T>> get snapshotNotifier => _snapshotNotifier;
 
   StreamSubscription<T>? _subscription;
 
@@ -58,17 +67,18 @@ class ReactiveStream<T> extends ReactiveController {
         _stream = stream,
         super(host) {
     if (initialData != null) {
-      _snapshot = AsyncSnapshot.withData(ConnectionState.waiting, initialData);
+      _snapshotNotifier.value =
+          AsyncSnapshot.withData(ConnectionState.waiting, initialData);
     }
 
     _subscription = _stream.listen((T data) {
-      final next = afterData(_snapshot, data);
+      final next = afterData(snapshot, data);
       _onChange(next);
     }, onError: (Object error, StackTrace stackTrace) {
-      final next = afterError(_snapshot, error, stackTrace);
+      final next = afterError(snapshot, error, stackTrace);
       _onChange(next);
     }, onDone: () {
-      final next = afterDone(_snapshot);
+      final next = afterDone(snapshot);
       _onChange(next);
     });
   }
@@ -77,12 +87,13 @@ class ReactiveStream<T> extends ReactiveController {
   void dispose() {
     _subscription?.cancel();
     _subscription = null;
+    _snapshotNotifier.dispose();
     super.dispose();
   }
 
   void _onChange(AsyncSnapshot<T> next) {
-    final prev = _snapshot;
-    _snapshot = next;
+    final prev = snapshot;
+    _snapshotNotifier.value = next;
     _onChanged?.call(prev, next);
     if (_updateHost) host.requestUpdate();
   }
@@ -115,4 +126,28 @@ class ReactiveStream<T> extends ReactiveController {
 
   AsyncSnapshot<T> afterDisconnected(AsyncSnapshot<T> current) =>
       current.inState(ConnectionState.none);
+}
+
+class ReactiveStreamController<T> extends ReactiveController {
+  late final StreamController<T> controller;
+  Stream<T> get stream => controller.stream;
+  StreamSink<T> get sink => controller.sink;
+
+  ReactiveStreamController(
+    ReactiveControllerHost host, {
+    bool sync = false,
+    VoidCallback? onListen,
+    VoidCallback? onCancel,
+  }) : super(host) {
+    controller = StreamController.broadcast(
+      onListen: onListen,
+      onCancel: onCancel,
+    );
+  }
+
+  @override
+  void dispose() {
+    controller.close();
+    super.dispose();
+  }
 }
