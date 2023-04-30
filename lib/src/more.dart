@@ -93,7 +93,6 @@ class ReactiveValue<T> extends ReactiveController {
   T get value => _value;
   set value(T value) {
     if (value == _value) return;
-    if (isMounted == false) return;
     _prev = _value;
     _value = value;
     onChange?.call(_prev, _value);
